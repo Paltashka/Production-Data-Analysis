@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { orderType } from './dto/orderType.enum';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 
 @Controller('orders')
 export class OrdersController {
@@ -17,18 +17,23 @@ export class OrdersController {
     return this.ordersService.findAll();
   }
 
-  @Get(':id')
+  @Get('find/:id')
   findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(+id);
+    return this.ordersService.findOne(id);
   }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.ordersService.update(+id, updateOrderDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
+  @Get('deadline/:orders')
+  async findOpen(@Param('orders') orderType: orderType) {
+    if (orderType == 'open') {
+      return this.ordersService.openOrders();
+    }
+    if (orderType == 'due') {
+      return this.ordersService.dueOrders();
+    }
+    if (orderType == 'late') {
+      return this.ordersService.lateOrders();
+    }
+    if (orderType == 'veryLate') {
+      return this.ordersService.veryLate();
+    }
   }
 }

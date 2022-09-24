@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'parts' })
 export class Part {
   @PrimaryGeneratedColumn()
   id: string;
@@ -56,8 +56,6 @@ export class Part {
   polishing: number;
   @Column()
   black_dye: number;
-  @Column()
-  support_removal: number;
   @Column()
   thumbnail: string;
   @Column()

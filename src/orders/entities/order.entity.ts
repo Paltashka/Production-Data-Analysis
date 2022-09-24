@@ -55,7 +55,3 @@ export class Order {
   @Column()
   MyUnknownColumn: string;
 }
-
-
-
-

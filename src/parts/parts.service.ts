@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreatePartDto } from './dto/create-part.dto';
-import { UpdatePartDto } from './dto/update-part.dto';
+import { Part } from './entities/part.entity';
 
 @Injectable()
 export class PartsService {
-  create(createPartDto: CreatePartDto) {
-    return 'This action adds a new part';
+  constructor(
+    @InjectRepository(Part) private partRepository: Repository<Part>,
+  ) {}
+
+  create(createPartDto: CreatePartDto): Promise<Part> {
+    const part = this.partRepository.create(createPartDto);
+    return this.partRepository.save(part);
   }
 
-  findAll() {
-    return `This action returns all parts`;
+  findAll(): Promise<Part[]> {
+    return this.partRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} part`;
+  findOne(id: string) {
+    return this.partRepository.findOne({ where: { id } });
   }
-
-  update(id: number, updatePartDto: UpdatePartDto) {
-    return `This action updates a #${id} part`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} part`;
+  async estimate() {
+    const res = await this.partRepository
+      .createQueryBuilder('parts')
+      .select('sum(value)')
+      .where('status= "New Part" and technology in ("SLS","MJF")')
+      .groupBy('technology')
+      .execute();
+    const slsValue = res[0]['sum(value)'] / 2500;
+    const mjfValue = res[1]['sum(value)'] / 1500;
+    return {
+      slsValue,
+      mjfValue,
+    };
   }
 }
