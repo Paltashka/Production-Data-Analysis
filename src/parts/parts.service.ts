@@ -22,18 +22,18 @@ export class PartsService {
   findOne(id: string) {
     return this.partRepository.findOne({ where: { id } });
   }
-  async estimate() {
-    const res = await this.partRepository
-      .createQueryBuilder('parts')
-      .select('sum(value)')
-      .where('status= "New Part" and technology in ("SLS","MJF")')
-      .groupBy('technology')
-      .execute();
-    const slsValue = res[0]['sum(value)'] / 2500;
-    const mjfValue = res[1]['sum(value)'] / 1500;
-    return {
-      slsValue,
-      mjfValue,
-    };
-  }
+  // async estimate() {
+  //   const res = await this.partRepository
+  //     .createQueryBuilder('parts')
+  //     .select('sum(value)')
+  //     .where('status= "New Part" and technology in ("SLS","MJF")')
+  //     .groupBy('technology')
+  //     .execute();
+  //   const slsValue = res[0]['sum(value)'] / 2500;
+  //   const mjfValue = res[1]['sum(value)'] / 1500;
+  //   return {
+  //     slsValue,
+  //     mjfValue,
+  //   };
+  // }
 }

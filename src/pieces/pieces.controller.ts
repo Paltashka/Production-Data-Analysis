@@ -20,8 +20,12 @@ export class PiecesController {
   findOne(@Param('id') id: string) {
     return this.piecesService.findOne(id);
   }
-  @Get('piecesByStatus')
+  @Get('pieces/status')
   async piecesByStatus() {
     return this.piecesService.piecesByStatus();
+  }
+  @Get('estimates')
+  async estimates() {
+    return this.piecesService.estimate();
   }
 }

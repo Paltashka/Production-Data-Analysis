@@ -26,16 +26,28 @@ export class PiecesService {
   }
   async piecesByStatus() {
     const res = await this.pieceRepository
-      .createQueryBuilder('pieces')
-      .select('pieces.status', 'status')
-      .addSelect('count(pieces.status)', 'value')
-      .innerJoin(Part, 'parts', 'pieces.part_id=parts.id')
-      .where('parts.on_hold=0 and parts.cancelled=0 ')
-      .andWhere('pieces.status != "Despatched"')
-      .groupBy('pieces.status')
-      .execute();
-    console.log(res);
-
+      .query(`select technology,pieces.status,count(pieces.id) as value
+    from pieces
+    inner join parts on pieces.part_id=parts.id
+    and (parts.cancelled = 0 and parts.on_hold = 0)
+    where pieces.status != "Despatched"
+    group by technology,pieces.status;`);
     return res;
+  }
+  async estimate() {
+    const res = await this.pieceRepository
+      .query(`select technology,count(pieces.id) as value
+    from pieces
+    inner join parts on pieces.part_id=parts.id
+    and (parts.cancelled = 0 and parts.on_hold = 0 and (parts.technology="SLS" or parts.technology="MJF"))
+    where pieces.status = "New" and pieces.build_id IS NULL
+    group by parts.technology;`);
+
+    const slsValue = res[0].value / 2500;
+    const mjfValue = res[1].value / 1500;
+    return {
+      slsValue,
+      mjfValue,
+    };
   }
 }

@@ -52,6 +52,4 @@ export class Order {
   tracking_id: string;
   @Column()
   tracking_url: string;
-  @Column()
-  MyUnknownColumn: string;
 }

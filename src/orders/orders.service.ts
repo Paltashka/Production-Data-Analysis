@@ -4,6 +4,7 @@ import { Part } from 'src/parts/entities/part.entity';
 import { Piece } from 'src/pieces/entities/piece.entity';
 import { Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { orderEnum } from './dto/orderType.enum';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { Order } from './entities/order.entity';
 
@@ -27,45 +28,51 @@ export class OrdersService {
   findOne(id: string) {
     return this.orderRepository.findOne({ where: { id } });
   }
-  async openOrders() {
-    const res = await this.orderRepository
-      .createQueryBuilder('orders')
-      .select('orders.id')
-      .innerJoin(
-        Part,
-        'parts',
-        'orders.id=parts.order_id and (parts.cancelled = 0 and parts.on_hold = false)',
-      )
-      .innerJoin(
-        Piece,
-        'pieces',
-        'pieces.order_id = orders.id and pieces.status != "Despatched"',
-      )
-      .execute();
-    return res.length;
+
+  async getSpecifiedOrders(orderType: orderEnum) {
+    if (orderType == 'open') {
+      return this.openOrders();
+    }
+    if (orderType == 'due') {
+      return this.dueOrders();
+    }
+    if (orderType == 'late') {
+      return this.lateOrders();
+    }
+    if (orderType == 'veryLate') {
+      return this.veryLate();
+    }
   }
 
-  async dueOrders() {
+  private async openOrders() {
+    const res = await this.orderRepository
+      .query(`select count(distinct(orders.id)) as value, parts.technology
+    from orders
+    inner join pieces on orders.id = pieces.order_id
+    and pieces.status != "Despatched"
+    inner join parts on orders.id =parts.order_id
+    and (parts.cancelled = 0 and parts.on_hold = 0)
+    group by parts.technology;`);
+    console.log(res);
+
+    return res;
+  }
+
+  private async dueOrders() {
     const date = new Date().toISOString().substring(0, 10);
     const res = await this.orderRepository
-      .createQueryBuilder('orders')
-      .select('orders.id')
-      .innerJoin(
-        Part,
-        'parts',
-        'orders.id=parts.order_id and (parts.cancelled = 0 and parts.on_hold = false)',
-      )
-      .innerJoin(
-        Piece,
-        'pieces',
-        'pieces.order_id = orders.id and pieces.status != "Despatched"',
-      )
-      .where(`orders.order_deadline ="${date}"`)
-      .execute();
-    return res.length;
+      .query(`select count(distinct(orders.id)) as value, parts.technology
+      from orders
+      inner join pieces on orders.id = pieces.order_id
+      and pieces.status != "Despatched" 
+      inner join parts on orders.id =parts.order_id 
+      and (parts.cancelled = 0 and parts.on_hold = 0)
+      where orders.order_deadline = "${date}"
+      group by parts.technology;`);
+    return res;
   }
 
-  async lateOrders() {
+  private async lateOrders() {
     const today = new Date();
     const date = today.toISOString().substring(0, 10);
     const dateMin2 = new Date(
@@ -75,24 +82,17 @@ export class OrdersService {
     );
     const dateMin2str = dateMin2.toISOString().substring(0, 10);
     const res = await this.orderRepository
-      .createQueryBuilder('orders')
-      .select('orders.id')
-      .innerJoin(
-        Part,
-        'parts',
-        'orders.id=parts.order_id and (parts.cancelled = 0 and parts.on_hold = false)',
-      )
-      .innerJoin(
-        Piece,
-        'pieces',
-        'pieces.order_id = orders.id and pieces.status != "Despatched"',
-      )
-      .where(`orders.order_deadline <"${date}"`)
-      .andWhere(`orders.order_deadline>="${dateMin2str}"`)
-      .execute();
-    return res.length;
+      .query(`select count(distinct(orders.id)) as value, parts.technology
+    from orders
+    inner join pieces on orders.id = pieces.order_id
+    and pieces.status != "Despatched" 
+    inner join parts on orders.id =parts.order_id 
+    and (parts.cancelled = 0 and parts.on_hold = 0)
+    where orders.order_deadline <"${date}" and orders.order_deadline>="${dateMin2str}"
+    group by parts.technology;`);
+    return res;
   }
-  async veryLate() {
+  private async veryLate() {
     const today = new Date();
     const date = new Date(
       today.getFullYear(),
@@ -100,24 +100,17 @@ export class OrdersService {
       today.getDate() - 1,
     );
     const datestr = date.toISOString().substring(0, 10);
-    console.log(datestr);
 
     const res = await this.orderRepository
-      .createQueryBuilder('orders')
-      .select('orders.id')
-      .innerJoin(
-        Part,
-        'parts',
-        'orders.id=parts.order_id and (parts.cancelled = 0 and parts.on_hold = false)',
-      )
-      .innerJoin(
-        Piece,
-        'pieces',
-        'pieces.order_id = orders.id and pieces.status != "Despatched"',
-      )
-      .where(`orders.order_deadline <"${datestr}"`)
-      .execute();
-    return res.length;
+      .query(`select count(distinct(orders.id)) as value, parts.technology
+    from orders
+    inner join pieces on orders.id = pieces.order_id
+    and pieces.status != "Despatched" 
+    inner join parts on orders.id =parts.order_id 
+    and (parts.cancelled = 0 and parts.on_hold = 0)
+    where orders.order_deadline <"${datestr}"
+    group by parts.technology;`);
+    return res;
   }
 
   async ordersDue() {
@@ -136,24 +129,14 @@ export class OrdersService {
     const plus2Weekstr = plus2Week.toISOString().substring(0, 10);
 
     const res = await this.orderRepository
-      .createQueryBuilder('orders')
-      .select('orders.id')
-      .innerJoin(
-        Part,
-        'parts',
-        'orders.id=parts.order_id and (parts.cancelled = 0 and parts.on_hold = false)',
-      )
-      .innerJoin(
-        Piece,
-        'pieces',
-        'pieces.order_id = orders.id and pieces.status != "Despatched"',
-      )
-      .where(`orders.order_deadline >"${plusWeekstr}"`)
-      .andWhere(`orders.order_deadline<${plus2Weekstr}`)
-      .where(
-        `orders.order_deadline >"${plusWeekstr}" and orders.order_deadline<"${plus2Weekstr}"`,
-      )
-      .execute();
-    return res.length;
+      .query(`select count(distinct(orders.id)) as value, parts.technology
+    from orders
+    inner join pieces on orders.id = pieces.order_id
+    and pieces.status != "Despatched" 
+    inner join parts on orders.id =parts.order_id 
+    and (parts.cancelled = 0 and parts.on_hold = 0)
+    where orders.order_deadline >"${plusWeekstr}" and orders.order_deadline<"${plus2Weekstr}"
+    group by parts.technology;`);
+    return res;
   }
 }

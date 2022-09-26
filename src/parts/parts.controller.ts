@@ -29,8 +29,4 @@ export class PartsController {
   findOne(@Param('id') id: string) {
     return this.partsService.findOne(id);
   }
-  @Get('estimates')
-  async estimates() {
-    return this.partsService.estimate();
-  }
 }
