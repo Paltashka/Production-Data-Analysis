@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { CreatePieceDto } from './dto/create-piece.dto';
 import { UpdatePieceDto } from './dto/update-piece.dto';
 import { Piece } from './entities/piece.entity';
+import { piecesStatus } from './types/piece.status.type';
 
 @Injectable()
 export class PiecesService {
@@ -25,14 +26,30 @@ export class PiecesService {
     return this.pieceRepository.findOne({ where: { id } });
   }
   async piecesByStatus() {
-    const res = await this.pieceRepository
+    let res = await this.pieceRepository
       .query(`select technology,pieces.status,count(pieces.id) as value
     from pieces
     inner join parts on pieces.part_id=parts.id
     and (parts.cancelled = 0 and parts.on_hold = 0)
     where pieces.status != "Despatched"
     group by technology,pieces.status;`);
-    return res;
+
+    res = res.map((obj) => {
+      const resObj: piecesStatus = {};
+      resObj[obj.technology] = obj.value;
+      resObj['status'] = obj.status;
+      res.forEach((arrElem, index) => {
+        if (
+          arrElem.technology !== obj.technology &&
+          arrElem.status === obj.status
+        ) {
+          resObj[arrElem.technology] = arrElem.value;
+          res.splice(index, 1);
+        }
+      });
+      return resObj;
+    });
+    return res.filter((obj) => obj);
   }
   async estimate() {
     const res = await this.pieceRepository
@@ -46,8 +63,8 @@ export class PiecesService {
     const slsValue = res[0].value / 2500;
     const mjfValue = res[1].value / 1500;
     return {
-      slsValue,
-      mjfValue,
+      SLS: slsValue,
+      MJF: mjfValue,
     };
   }
 }

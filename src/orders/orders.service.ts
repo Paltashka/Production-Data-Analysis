@@ -60,16 +60,27 @@ export class OrdersService {
 
   private async dueOrders() {
     const date = new Date().toISOString().substring(0, 10);
-    const res = await this.orderRepository
-      .query(`select count(distinct(orders.id)) as value, parts.technology
+    const res =
+      await // .query(`select count(distinct(orders.id)) as value, parts.technology
+      // from orders
+      // inner join pieces on orders.id = pieces.order_id
+      // and pieces.status != "Despatched"
+      // inner join parts on orders.id =parts.order_id
+      // and (parts.cancelled = 0 and parts.on_hold = 0)
+      // where orders.order_deadline = "${date}"
+      // group by parts.technology;`);
+
+      this.orderRepository
+        .query(`select count(distinct(orders.id)) as value, parts.technology
       from orders
       inner join pieces on orders.id = pieces.order_id
       and pieces.status != "Despatched" 
       inner join parts on orders.id =parts.order_id 
       and (parts.cancelled = 0 and parts.on_hold = 0)
-      where orders.order_deadline = "${date}"
+      where orders.order_deadline = "2022-09-20"
       group by parts.technology;`);
     return res;
+    // 2022-09-20
   }
 
   private async lateOrders() {
@@ -88,7 +99,7 @@ export class OrdersService {
     and pieces.status != "Despatched" 
     inner join parts on orders.id =parts.order_id 
     and (parts.cancelled = 0 and parts.on_hold = 0)
-    where orders.order_deadline <"${date}" and orders.order_deadline>="${dateMin2str}"
+    where orders.order_deadline <"2022-08-26" and orders.order_deadline>="2022-08-24"
     group by parts.technology;`);
     return res;
   }
@@ -101,14 +112,23 @@ export class OrdersService {
     );
     const datestr = date.toISOString().substring(0, 10);
 
-    const res = await this.orderRepository
-      .query(`select count(distinct(orders.id)) as value, parts.technology
+    const res =
+      await //   .query(`select count(distinct(orders.id)) as value, parts.technology
+      // from orders
+      // inner join pieces on orders.id = pieces.order_id
+      // and pieces.status != "Despatched"
+      // inner join parts on orders.id =parts.order_id
+      // and (parts.cancelled = 0 and parts.on_hold = 0)
+      // where orders.order_deadline <"${datestr}"
+      // group by parts.technology;`);
+      this.orderRepository
+        .query(`select count(distinct(orders.id)) as value, parts.technology
     from orders
     inner join pieces on orders.id = pieces.order_id
     and pieces.status != "Despatched" 
     inner join parts on orders.id =parts.order_id 
     and (parts.cancelled = 0 and parts.on_hold = 0)
-    where orders.order_deadline <"${datestr}"
+    where orders.order_deadline <"2022-09-23"
     group by parts.technology;`);
     return res;
   }
@@ -128,14 +148,23 @@ export class OrdersService {
     );
     const plus2Weekstr = plus2Week.toISOString().substring(0, 10);
 
-    const res = await this.orderRepository
-      .query(`select count(distinct(orders.id)) as value, parts.technology
+    const res =
+      await //   .query(`select count(distinct(orders.id)) as value, parts.technology
+      // from orders
+      // inner join pieces on orders.id = pieces.order_id
+      // and pieces.status != "Despatched"
+      // inner join parts on orders.id =parts.order_id
+      // and (parts.cancelled = 0 and parts.on_hold = 0)
+      // where orders.order_deadline >"${plusWeekstr}" and orders.order_deadline<"${plus2Weekstr}"
+      // group by parts.technology;`);
+      this.orderRepository
+        .query(`select count(distinct(orders.id)) as value, parts.technology
     from orders
     inner join pieces on orders.id = pieces.order_id
     and pieces.status != "Despatched" 
     inner join parts on orders.id =parts.order_id 
     and (parts.cancelled = 0 and parts.on_hold = 0)
-    where orders.order_deadline >"${plusWeekstr}" and orders.order_deadline<"${plus2Weekstr}"
+    where orders.order_deadline >"2022-09-19" and orders.order_deadline<"2022-09-26"
     group by parts.technology;`);
     return res;
   }

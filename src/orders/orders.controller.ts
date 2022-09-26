@@ -25,7 +25,7 @@ export class OrdersController {
   async findOpen(@Param('orders') orderType: orderEnum) {
     return this.ordersService.getSpecifiedOrders(orderType);
   }
-  @Get('orders/due')
+  @Get('due')
   async ordersDue() {
     return this.ordersService.ordersDue();
   }

@@ -20,7 +20,7 @@ export class PiecesController {
   findOne(@Param('id') id: string) {
     return this.piecesService.findOne(id);
   }
-  @Get('pieces/status')
+  @Get('status')
   async piecesByStatus() {
     return this.piecesService.piecesByStatus();
   }
