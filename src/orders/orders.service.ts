@@ -29,6 +29,17 @@ export class OrdersService {
     return this.orderRepository.findOne({ where: { id } });
   }
 
+  async createResponseObj(resArr, status) {
+    const resObj = { status };
+    resArr.forEach((obj) => {
+      resObj[obj.technology] = obj.value;
+      return obj;
+    });
+    console.log(resObj);
+
+    return resObj;
+  }
+
   async getSpecifiedOrders(orderType: orderEnum) {
     if (orderType == 'open') {
       return this.openOrders();
@@ -53,9 +64,7 @@ export class OrdersService {
     inner join parts on orders.id =parts.order_id
     and (parts.cancelled = 0 and parts.on_hold = 0)
     group by parts.technology;`);
-    console.log(res);
-
-    return res;
+    return this.createResponseObj(res, 'open');
   }
 
   private async dueOrders() {
@@ -79,8 +88,18 @@ export class OrdersService {
       and (parts.cancelled = 0 and parts.on_hold = 0)
       where orders.order_deadline = "2022-09-20"
       group by parts.technology;`);
-    return res;
+    return this.createResponseObj(res, 'due');
+
     // 2022-09-20
+  }
+
+  async fullChart() {
+    const res: any[] = [];
+    res.push(await this.openOrders());
+    res.push(await this.dueOrders());
+    res.push(await this.lateOrders());
+    res.push(await this.veryLate());
+    return res;
   }
 
   private async lateOrders() {
@@ -101,7 +120,7 @@ export class OrdersService {
     and (parts.cancelled = 0 and parts.on_hold = 0)
     where orders.order_deadline <"2022-08-26" and orders.order_deadline>="2022-08-24"
     group by parts.technology;`);
-    return res;
+    return this.createResponseObj(res, 'late');
   }
   private async veryLate() {
     const today = new Date();
@@ -130,7 +149,7 @@ export class OrdersService {
     and (parts.cancelled = 0 and parts.on_hold = 0)
     where orders.order_deadline <"2022-09-23"
     group by parts.technology;`);
-    return res;
+    return this.createResponseObj(res, 'very Late');
   }
 
   async ordersDue() {
@@ -158,14 +177,21 @@ export class OrdersService {
       // where orders.order_deadline >"${plusWeekstr}" and orders.order_deadline<"${plus2Weekstr}"
       // group by parts.technology;`);
       this.orderRepository
-        .query(`select count(distinct(orders.id)) as value, parts.technology
+        .query(`select count(distinct(orders.id)) as value, parts.technology,orders.order_deadline
     from orders
     inner join pieces on orders.id = pieces.order_id
     and pieces.status != "Despatched" 
     inner join parts on orders.id =parts.order_id 
     and (parts.cancelled = 0 and parts.on_hold = 0)
     where orders.order_deadline >"2022-09-19" and orders.order_deadline<"2022-09-26"
-    group by parts.technology;`);
+    group by parts.technology, orders.order_deadline;`);
+    res.forEach((obj) => {
+      obj.status = obj.order_deadline;
+      obj[obj.technology] = obj.value;
+      delete obj.order_deadline;
+      delete obj.technology;
+      delete obj.value;
+    });
     return res;
   }
 }

@@ -60,11 +60,19 @@ export class PiecesService {
     where pieces.status = "New" and pieces.build_id IS NULL
     group by parts.technology;`);
 
-    const slsValue = res[0].value / 2500;
-    const mjfValue = res[1].value / 1500;
-    return {
-      SLS: slsValue,
-      MJF: mjfValue,
-    };
+    res.forEach((obj) => {
+      obj.status = obj.technology;
+
+      if (obj.status === 'SLS') {
+        obj[obj.technology] = obj.value / 2500;
+      }
+      if (obj.status === 'MJF') {
+        obj[obj.technology] = obj.value / 1500;
+      }
+      delete obj.technology;
+      delete obj.value;
+    });
+
+    return res;
   }
 }

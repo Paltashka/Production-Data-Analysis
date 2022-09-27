@@ -25,6 +25,10 @@ export class OrdersController {
   async findOpen(@Param('orders') orderType: orderEnum) {
     return this.ordersService.getSpecifiedOrders(orderType);
   }
+  @Get('deadline')
+  async fullChart() {
+    return this.ordersService.fullChart();
+  }
   @Get('due')
   async ordersDue() {
     return this.ordersService.ordersDue();
