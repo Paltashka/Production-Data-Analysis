@@ -1,0 +1,19 @@
+.menu {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 20%;
+
+  &__item {
+    padding: 10px;
+    box-sizing: border-box;
+    font-size: 20px;
+    color: #222;
+    cursor: pointer;
+
+    &:hover {
+      color: #0096FF;
+    }
+  }
+}

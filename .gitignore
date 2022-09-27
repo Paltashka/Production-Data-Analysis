@@ -1,11 +1,8 @@
 # compiled output
-/dist
-/node_modules
-/web
-/yarn.lock
-web
+server/dist
+server/node_modules
+web/node_modules 
 /test
-test
 # Logs
 logs
 *.log
